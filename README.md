@@ -1,5 +1,5 @@
 # CSC490 - KVASIR Kings
-Exploring ML applications in colonoscopies through the Hyper-Kvasir dataset. 
+Exploring ML applications in colonoscopies through the HyperKvasir dataset. 
 
 ## Members:
 * Taha Kazi
