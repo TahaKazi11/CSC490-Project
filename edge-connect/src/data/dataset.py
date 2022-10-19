@@ -1,4 +1,5 @@
 import glob
+import hyrda
 import os
 import random
 import scipy
@@ -8,14 +9,17 @@ import imageio.v3 as iio
 import numpy as np
 import torchvision.transforms.functional as F
 
+from omegaconf import DictConfig, OmegaConf
 from PIL import image
 from skimage.feature import canny
 from skimage.color import rgb2gray, gray2rgb
 from torch.utils.data import DataLoader
 
-'''
+"""
 https://github.com/AndreFagereng/polyp-GAN/blob/main/edge-connect/src/dataset.py
-'''
+"""
+
+
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, cfg, flist, edge_flist, mask_flist, augment=True, training=True):
         super(Dataset, self).__init__()
@@ -41,7 +45,7 @@ class Dataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         return 0
-        
+
     def load_name(self, index):
         name = self.data[index]
         return os.path.basename(name)
@@ -50,7 +54,7 @@ class Dataset(torch.utils.data.Dataset):
         size = self.input_size
         if self.mask == 6:
             size = 256
-        
+
         # load image
         img = iio.imread(self.data[index], index=None)
 
@@ -66,7 +70,7 @@ class Dataset(torch.utils.data.Dataset):
 
         # load maskilen
         mask_filename = self.load_name(index)
-        mask_path = '/'.join(self.mask_data[0].split('/')[0:-1]) + '/' + mask_filename
+        mask_path = "/".join(self.mask_data[0].split("/")[0:-1]) + "/" + mask_filename
         mask = self.load_mask(img, index, mask_filename)
 
         # load edge
@@ -74,9 +78,14 @@ class Dataset(torch.utils.data.Dataset):
 
         # TODO: work on new augments
         # if self.augment:
-            
-        return self.to_tensor(img), self.to_tensor(img_gray), self.to_tensor(edge), self.to_tensor(mask)
-    
+
+        return (
+            self.to_tensor(img),
+            self.to_tensor(img_gray),
+            self.to_tensor(edge),
+            self.to_tensor(mask),
+        )
+
     def load_edge(self, img, index, mask):
         sigma = self.sigma
 
@@ -100,7 +109,7 @@ class Dataset(torch.utils.data.Dataset):
             edge = self.resize(edge, imgh, imgw)
 
             # non-max suppression
-            #if self.nms == 1:
+            # if self.nms == 1:
             #    edge = edge * canny(img, sigma=sigma, mask=mask)
 
             return edge
@@ -109,7 +118,7 @@ class Dataset(torch.utils.data.Dataset):
         mask = np.zeros((height, width))
         mask_x = x if x is not None else random.randint(0, width - mask_width)
         mask_y = y if y is not None else random.randint(0, height - mask_height)
-        mask[mask_y:mask_y + mask_height, mask_x:mask_x + mask_width] = 1
+        mask[mask_y : mask_y + mask_height, mask_x : mask_x + mask_width] = 1
         return mask
 
     def load_mask(self, img, index, f):
@@ -119,7 +128,7 @@ class Dataset(torch.utils.data.Dataset):
         if f is not None:
             mask = iio.imread(f)
             mask = self.resize(mask, imgh, imgw)
-            mask = (mask > 0).astype(np.uint8) * 255       # threshold due to interpolation
+            mask = (mask > 0).astype(np.uint8) * 255  # threshold due to interpolation
             return mask
 
         # external + random block
@@ -137,14 +146,21 @@ class Dataset(torch.utils.data.Dataset):
         # half
         if mask_type == 2:
             # randomly choose right or left
-            return self.create_mask(imgw, imgh, imgw // 2, imgh, 0 if random.random() < 0.5 else imgw // 2, 0)
+            return self.create_mask(
+                imgw,
+                imgh,
+                imgw // 2,
+                imgh,
+                0 if random.random() < 0.5 else imgw // 2,
+                0,
+            )
 
         # external
         if mask_type == 3:
             mask_index = random.randint(0, len(self.mask_data) - 1)
             mask = imread(self.mask_data[mask_index])
             mask = self.resize(mask, imgh, imgw)
-            mask = (mask > 0).astype(np.uint8) * 255       # threshold due to interpolation
+            mask = (mask > 0).astype(np.uint8) * 255  # threshold due to interpolation
             return mask
 
         # test mode: load mask non random
@@ -168,8 +184,8 @@ class Dataset(torch.utils.data.Dataset):
             side = np.minimum(imgh, imgw)
             j = (imgh - side) // 2
             i = (imgw - side) // 2
-            img = img[j:j + side, i:i + side, ...]
-        
+            img = img[j : j + side, i : i + side, ...]
+
         return Image.fromarray(img).resize(size=(height, width))
 
     def load_flist(self, flist):
@@ -180,28 +196,25 @@ class Dataset(torch.utils.data.Dataset):
         # flist: image file path, image directory path, text file flist path
         if isinstance(flist, str):
             if os.path.isdir(flist):
-                flist = list(glob.glob(flist + '/*.jpg')) + list(glob.glob(flist + '/*.png'))
+                flist = list(glob.glob(flist + "/*.jpg")) + list(
+                    glob.glob(flist + "/*.png")
+                )
                 flist.sort()
                 return flist
 
             if os.path.isfile(flist):
                 try:
-                    return np.genfromtxt(flist, dtype=np.str, encoding='utf-8')
+                    return np.genfromtxt(flist, dtype=np.str, encoding="utf-8")
                 except:
                     return [flist]
-       
 
         return []
 
     def create_iterator(self, batch_size):
         while True:
             sample_loader = DataLoader(
-                dataset=self,
-                batch_size=batch_size,
-                drop_last=True
+                dataset=self, batch_size=batch_size, drop_last=True
             )
 
             for item in sample_loader:
                 yield item
-
-
