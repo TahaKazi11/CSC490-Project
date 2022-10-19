@@ -25,7 +25,7 @@ class Dataset(torch.utils.data.Dataset):
         self.edge_data = self.load_flist(edge_flist)
         self.mask_data = self.load_flist(mask_flist)
 
-        self.input_size = config.INPUT_SIZE
+        self.input_size = cfg.INPUT_SIZE
         self.sigma = cfg.SIGMA
         self.edge = cfg.EDGE
         self.mask = cfg.MASK

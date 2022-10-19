@@ -7,15 +7,15 @@ from ..evaluators.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 
 
 class BaseModel(nn.Module):
-    def __init__(self, name, config):
+    def __init__(self, name, cfg):
         super(BaseModel, self).__init__()
 
         self.name = name
-        self.config = config
+        self.cfg = cfg
         self.iteration = 0
 
-        self.gen_weights_path = os.path.join(config.PATH, name + '_425000_432000_gen.pth')
-        self.dis_weights_path = os.path.join(config.PATH, name + '_425000_dis.pth')
+        self.gen_weights_path = os.path.join(cfg.PATH, name + '_425000_432000_gen.pth')
+        self.dis_weights_path = os.path.join(cfg.PATH, name + '_425000_dis.pth')
         print(self.gen_weights_path)
 
     def load(self):
@@ -32,7 +32,7 @@ class BaseModel(nn.Module):
             self.iteration = data['iteration']
 
         # load discriminator only when training
-        if self.config.MODE == 1 and os.path.exists(self.dis_weights_path):
+        if self.cfg.MODE == 1 and os.path.exists(self.dis_weights_path):
             print('Loading %s discriminator...' % self.name)
 
             if torch.cuda.is_available():
@@ -61,18 +61,18 @@ class BaseModel(nn.Module):
 
 
 class EdgeModel(BaseModel):
-    def __init__(self, config):
-        super(EdgeModel, self).__init__('EdgeModel', config)
+    def __init__(self, cfg):
+        super(EdgeModel, self).__init__('EdgeModel', cfg)
 
         # generator input: [grayscale(1) + edge(1) + mask(1)]
         # discriminator input: (grayscale(1) + edge(1))
         generator = EdgeGenerator(use_spectral_norm=True)
-        discriminator = Discriminator(in_channels=2, use_sigmoid=config.GAN_LOSS != 'hinge')
-        if len(config.GPU) > 1:
-            generator = nn.DataParallel(generator, config.GPU)
-            discriminator = nn.DataParallel(discriminator, config.GPU)
+        discriminator = Discriminator(in_channels=2, use_sigmoid=cfg.GAN_LOSS != 'hinge')
+        if len(cfg.GPU) > 1:
+            generator = nn.DataParallel(generator, cfg.GPU)
+            discriminator = nn.DataParallel(discriminator, cfg.GPU)
         l1_loss = nn.L1Loss()
-        adversarial_loss = AdversarialLoss(type=config.GAN_LOSS)
+        adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
 
         self.add_module('generator', generator)
         self.add_module('discriminator', discriminator)
@@ -82,14 +82,14 @@ class EdgeModel(BaseModel):
 
         self.gen_optimizer = optim.Adam(
             params=generator.parameters(),
-            lr=float(config.LR),
-            betas=(config.BETA1, config.BETA2)
+            lr=float(cfg.LR),
+            betas=(cfg.BETA1, cfg.BETA2)
         )
 
         self.dis_optimizer = optim.Adam(
             params=discriminator.parameters(),
-            lr=float(config.LR) * float(config.D2G_LR),
-            betas=(config.BETA1, config.BETA2)
+            lr=float(cfg.LR) * float(cfg.D2G_LR),
+            betas=(cfg.BETA1, cfg.BETA2)
         )
 
     def process(self, images, edges, masks):
@@ -128,7 +128,7 @@ class EdgeModel(BaseModel):
         gen_fm_loss = 0
         for i in range(len(dis_real_feat)):
             gen_fm_loss += self.l1_loss(gen_fake_feat[i], dis_real_feat[i].detach())
-        gen_fm_loss = gen_fm_loss * self.config.FM_LOSS_WEIGHT
+        gen_fm_loss = gen_fm_loss * self.cfg.FM_LOSS_WEIGHT
         gen_loss += gen_fm_loss
 
 
@@ -159,21 +159,21 @@ class EdgeModel(BaseModel):
 
 
 class InpaintingModel(BaseModel):
-    def __init__(self, config):
-        super(InpaintingModel, self).__init__('InpaintingModel', config)
+    def __init__(self, cfg):
+        super(InpaintingModel, self).__init__('InpaintingModel', cfg)
 
         # generator input: [rgb(3) + edge(1)]
         # discriminator input: [rgb(3)]
         generator = InpaintGenerator()
-        discriminator = Discriminator(in_channels=3, use_sigmoid=config.GAN_LOSS != 'hinge')
-        if len(config.GPU) > 1:
-            generator = nn.DataParallel(generator, config.GPU)
-            discriminator = nn.DataParallel(discriminator , config.GPU)
+        discriminator = Discriminator(in_channels=3, use_sigmoid=cfg.GAN_LOSS != 'hinge')
+        if len(cfg.GPU) > 1:
+            generator = nn.DataParallel(generator, cfg.GPU)
+            discriminator = nn.DataParallel(discriminator , cfg.GPU)
 
         l1_loss = nn.L1Loss()
         perceptual_loss = PerceptualLoss()
         style_loss = StyleLoss()
-        adversarial_loss = AdversarialLoss(type=config.GAN_LOSS)
+        adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
 
         self.add_module('generator', generator)
         self.add_module('discriminator', discriminator)
@@ -185,14 +185,14 @@ class InpaintingModel(BaseModel):
 
         self.gen_optimizer = optim.Adam(
             params=generator.parameters(),
-            lr=float(config.LR),
-            betas=(config.BETA1, config.BETA2)
+            lr=float(cfg.LR),
+            betas=(cfg.BETA1, cfg.BETA2)
         )
 
         self.dis_optimizer = optim.Adam(
             params=discriminator.parameters(),
-            lr=float(config.LR) * float(config.D2G_LR),
-            betas=(config.BETA1, config.BETA2)
+            lr=float(cfg.LR) * float(cfg.D2G_LR),
+            betas=(cfg.BETA1, cfg.BETA2)
         )
 
     def process(self, images, edges, masks):
@@ -222,24 +222,24 @@ class InpaintingModel(BaseModel):
         # generator adversarial loss
         gen_input_fake = outputs
         gen_fake, _ = self.discriminator(gen_input_fake)                    # in: [rgb(3)]
-        gen_gan_loss = self.adversarial_loss(gen_fake, True, False) * self.config.INPAINT_ADV_LOSS_WEIGHT
+        gen_gan_loss = self.adversarial_loss(gen_fake, True, False) * self.cfg.INPAINT_ADV_LOSS_WEIGHT
         gen_loss += gen_gan_loss
 
 
         # generator l1 loss
-        gen_l1_loss = self.l1_loss(outputs, images) * self.config.L1_LOSS_WEIGHT / torch.mean(masks)
+        gen_l1_loss = self.l1_loss(outputs, images) * self.cfg.L1_LOSS_WEIGHT / torch.mean(masks)
         gen_loss += gen_l1_loss
 
 
         # generator perceptual loss
         gen_content_loss = self.perceptual_loss(outputs, images)
-        gen_content_loss = gen_content_loss * self.config.CONTENT_LOSS_WEIGHT
+        gen_content_loss = gen_content_loss * self.cfg.CONTENT_LOSS_WEIGHT
         gen_loss += gen_content_loss
 
 
         # generator style loss
         gen_style_loss = self.style_loss(outputs * masks, images * masks)
-        gen_style_loss = gen_style_loss * self.config.STYLE_LOSS_WEIGHT
+        gen_style_loss = gen_style_loss * self.cfg.STYLE_LOSS_WEIGHT
         gen_loss += gen_style_loss
 
 
