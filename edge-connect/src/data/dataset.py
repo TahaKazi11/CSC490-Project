@@ -26,14 +26,14 @@ class Dataset(torch.utils.data.Dataset):
         self.mask_data = self.load_flist(mask_flist)
 
         self.input_size = config.INPUT_SIZE
-        self.sigma = config.SIGMA
-        self.edge = config.EDGE
-        self.mask = config.MASK
-        self.nms = config.NMS
+        self.sigma = cfg.SIGMA
+        self.edge = cfg.EDGE
+        self.mask = cfg.MASK
+        self.nms = cfg.NMS
 
         # in test mode, there's a one-to-one relationship between mask and image
         # masks are loaded non random
-        if config.MODE == 2:
+        if cfg.MODE == 2:
             self.mask = 6
 
     def __len__(self):
