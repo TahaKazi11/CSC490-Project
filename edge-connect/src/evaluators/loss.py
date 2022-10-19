@@ -3,6 +3,11 @@ import torch.nn as nn
 import torchvision.models as models
 
 
+"""
+https://github.com/AndreFagereng/polyp-GAN/blob/main/edge-connect/src/loss.py
+"""
+
+
 class AdversarialLoss(nn.Module):
     r"""
     Adversarial loss

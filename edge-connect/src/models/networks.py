@@ -1,6 +1,10 @@
 import torch
 import torch.nn as nn
 
+"""
+https://github.com/AndreFagereng/polyp-GAN/tree/main/edge-connect/src/networks.py
+"""
+
 
 class BaseNetwork(nn.Module):
     def __init__(self):

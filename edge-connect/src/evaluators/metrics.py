@@ -1,6 +1,10 @@
 import torch
 import torch.nn as nn
 
+"""
+https://github.com/AndreFagereng/polyp-GAN/blob/main/edge-connect/src/metrics.py
+"""
+
 
 class EdgeAccuracy(nn.Module):
     """

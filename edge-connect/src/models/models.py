@@ -5,6 +5,10 @@ import torch.optim as optim
 from .networks import InpaintGenerator, EdgeGenerator, Discriminator
 from ..evaluators.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 
+"""
+https://github.com/AndreFagereng/polyp-GAN/tree/main/edge-connect/src/models.py
+"""
+
 
 class BaseModel(nn.Module):
     def __init__(self, name, cfg):
