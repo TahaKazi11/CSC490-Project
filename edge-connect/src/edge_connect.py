@@ -3,7 +3,7 @@ import os
 import torch
 import numpy as np
 
-from omegaconf import DictConf, OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader
 from data.dataset import Dataset
 from evaluators.metrics import PSNR, EdgeAccuracy
@@ -24,11 +24,13 @@ class EdgeConnect():
 
         self.debug = cfg.DEBUG
         self.model_name = model_name
-        self.edge_model = EdgeModel(cfg).to(cfg.DEVICE)
-        self.inpaint_model = InpaintingModel(cfg).to(cfg.DEVICE)
+        self.device = torch.device(cfg.DEVICE)
 
-        self.psnr = PSNR(255.0).to(cfg.DEVICE)
-        self.edgeacc = EdgeAccuracy(cfg.EDGE_THRESHOLD).to(cfg.DEVICE)
+        self.edge_model = EdgeModel(cfg).to(self.device)
+        self.inpaint_model = InpaintingModel(cfg).to(self.device)
+
+        self.psnr = PSNR(255.0).to(self.device)
+        self.edgeacc = EdgeAccuracy(cfg.EDGE_THRESHOLD).to(self.device)
 
         train_flist = cfg.TRAIN_FLIST.split('/')[1]
         
@@ -409,7 +411,7 @@ class EdgeConnect():
             f.write('%s\n' % ' '.join([str(item[1]) for item in logs]))
 
     def cuda(self, *args):
-        return (item.to(self.cfg.DEVICE) for item in args)
+        return (item.to(self.self.device) for item in args)
 
     def postprocess(self, img):
         # [0, 1] => [0, 255]
