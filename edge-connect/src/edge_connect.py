@@ -1,3 +1,4 @@
+import cv2
 import hydra
 import os
 import torch
@@ -8,6 +9,7 @@ from torch.utils.data import DataLoader
 from .data.dataset import Dataset
 from .evaluators.metrics import PSNR, EdgeAccuracy
 from .models.models import EdgeModel, InpaintingModel
+from .utils.utils import Progbar
 
 class EdgeConnect():
     def __init__(self, cfg):
@@ -98,7 +100,7 @@ class EdgeConnect():
             epoch += 1
             print('\n\nTraining epoch: %d' % epoch)
 
-            # progbar = Progbar(total, width=20, stateful_metrics=['epoch', 'iter'])
+            progbar = Progbar(total, width=20, stateful_metrics=['epoch', 'iter'])
 
             for items in train_loader:
                 self.edge_model.train()
@@ -194,7 +196,7 @@ class EdgeConnect():
                     ("iter", iteration),
                 ] + logs
 
-                # progbar.add(len(images), values=logs if self.cfg.VERBOSE else [x for x in logs if not x[0].startswith('l_')])
+                progbar.add(len(images), values=logs if self.cfg.VERBOSE else [x for x in logs if not x[0].startswith('l_')])
 
                 # log model at checkpoints
                 if self.cfg.LOGGING.LOG_INTERVAL and iteration % self.cfg.LOGGING.LOG_INTERVAL == 0:
@@ -337,15 +339,15 @@ class EdgeConnect():
             path = os.path.join(self.results_path, name)
             print(index, name)
 
-            imsave(output, path)
+            cv2.imsave(output, path)
 
             if self.debug:
                 edges = self.postprocess(1 - edges)[0]
                 masked = self.postprocess(images * (1 - masks) + masks)[0]
                 fname, fext = name.split('.')
 
-                imsave(edges, os.path.join(self.results_path, fname + '_edge.' + fext))
-                imsave(masked, os.path.join(self.results_path, fname + '_masked.' + fext))
+                cv2.imsave(edges, os.path.join(self.results_path, fname + '_edge.' + fext))
+                cv2.imsave(masked, os.path.join(self.results_path, fname + '_masked.' + fext))
 
         print('\nEnd test....')
 
