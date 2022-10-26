@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import numpy as np
 
 class Progbar(object):
     """Displays a progress bar.
