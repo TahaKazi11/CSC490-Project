@@ -6,19 +6,21 @@ NMS: 1                          # 0: no non-max-suppression 1: applies non-max-s
 SEED: 10                        # random seed
 GPU:                            # list of gpu ids
   - 0                        
-DEBUG: 0                        # turns on debugging mode
+DEBUG: 1                      # turns on debugging mode
 VERBOSE: 0                      # turns on verbose mode in the output console
-DEVICE: rocm:0
+DEVICE: cuda:0
 NUM_WORKERS: 0
-PATH: /home/thomas/Documents/school/csc490/CSC490-PROJECT/output
 
-TRAIN_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/images
-TRAIN_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/edges
-TRAIN_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/masks
+PATH: /home/thomas/Documents/school/csc490/CSC490-Project/output
+RESULTS: NULL
 
-VAL_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/images
-VAL_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/edges
-VAL_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/masks
+TRAIN_FLIST: /home/thomas/Documents/school/csc490/CSC490-Project/datasets/train/images
+TRAIN_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-Project/datasets/train/edges
+TRAIN_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-Project/datasets/train/masks
+
+VAL_FLIST: /home/thomas/Documents/school/csc490/CSC490-Project/datasets/train/images
+VAL_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-Project/datasets/train/edges
+VAL_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-Project/datasets/train/masks
 
 SOLVER:
   LR: 0.0001                      # learning rate
