@@ -93,7 +93,7 @@ class EdgeModel(BaseModel):
             generator = nn.DataParallel(generator, cfg.GPU)
             discriminator = nn.DataParallel(discriminator, cfg.GPU)
         l1_loss = nn.L1Loss()
-        adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
+        adversarial_loss = AdversarialLoss(type=cfg.LOSS.GAN_LOSS)
 
         self.add_module("generator", generator)
         self.add_module("discriminator", discriminator)
@@ -103,14 +103,14 @@ class EdgeModel(BaseModel):
 
         self.gen_optimizer = optim.Adam(
             params=generator.parameters(),
-            lr=float(cfg.LR),
-            betas=(cfg.BETA1, cfg.BETA2),
+            lr=float(cfg.SOLVER.LR),
+            betas=(cfg.SOLVER.BETA1, cfg.SOLVER.BETA2),
         )
 
         self.dis_optimizer = optim.Adam(
             params=discriminator.parameters(),
-            lr=float(cfg.LR) * float(cfg.D2G_LR),
-            betas=(cfg.BETA1, cfg.BETA2),
+            lr=float(cfg.SOVLER.LR) * float(cfg.SOLVER.D2G_LR),
+            betas=(cfg.SOLVER.BETA1, cfg.SOLVER.BETA2),
         )
 
     def process(self, images, edges, masks):
@@ -150,7 +150,7 @@ class EdgeModel(BaseModel):
         gen_fm_loss = 0
         for i in range(len(dis_real_feat)):
             gen_fm_loss += self.l1_loss(gen_fake_feat[i], dis_real_feat[i].detach())
-        gen_fm_loss = gen_fm_loss * self.cfg.FM_LOSS_WEIGHT
+        gen_fm_loss = gen_fm_loss * self.cfg.LOSS.FM_LOSS_WEIGHT
         gen_loss += gen_fm_loss
 
         # create logs
@@ -187,7 +187,7 @@ class InpaintingModel(BaseModel):
         # discriminator input: [rgb(3)]
         generator = InpaintGenerator()
         discriminator = Discriminator(
-            in_channels=3, use_sigmoid=cfg.GAN_LOSS != "hinge"
+            in_channels=3, use_sigmoid=cfg.LOSS.GAN_LOSS != "hinge"
         )
         if len(cfg.GPU) > 1:
             generator = nn.DataParallel(generator, cfg.GPU)
@@ -196,7 +196,7 @@ class InpaintingModel(BaseModel):
         l1_loss = nn.L1Loss()
         perceptual_loss = PerceptualLoss()
         style_loss = StyleLoss()
-        adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
+        adversarial_loss = AdversarialLoss(type=cfg.LOSS.GAN_LOSS)
 
         self.add_module("generator", generator)
         self.add_module("discriminator", discriminator)
@@ -208,14 +208,14 @@ class InpaintingModel(BaseModel):
 
         self.gen_optimizer = optim.Adam(
             params=generator.parameters(),
-            lr=float(cfg.LR),
-            betas=(cfg.BETA1, cfg.BETA2),
+            lr=float(cfg.SOLVER.LR),
+            betas=(cfg.SOLVER.BETA1, cfg.SOLVER.BETA2),
         )
 
         self.dis_optimizer = optim.Adam(
             params=discriminator.parameters(),
-            lr=float(cfg.LR) * float(cfg.D2G_LR),
-            betas=(cfg.BETA1, cfg.BETA2),
+            lr=float(cfg.SOLVER.LR) * float(cfg.SOLVER.D2G_LR),
+            betas=(cfg.SOLVER.BETA1, cfg.SOLVER.BETA2),
         )
 
     def process(self, images, edges, masks):
@@ -244,24 +244,24 @@ class InpaintingModel(BaseModel):
         gen_fake, _ = self.discriminator(gen_input_fake)  # in: [rgb(3)]
         gen_gan_loss = (
             self.adversarial_loss(gen_fake, True, False)
-            * self.cfg.INPAINT_ADV_LOSS_WEIGHT
+            * self.cfg.LOSS.INPAINT_ADV_LOSS_WEIGHT
         )
         gen_loss += gen_gan_loss
 
         # generator l1 loss
         gen_l1_loss = (
-            self.l1_loss(outputs, images) * self.cfg.L1_LOSS_WEIGHT / torch.mean(masks)
+            self.l1_loss(outputs, images) * self.cfg.LOSS.L1_LOSS_WEIGHT / torch.mean(masks)
         )
         gen_loss += gen_l1_loss
 
         # generator perceptual loss
         gen_content_loss = self.perceptual_loss(outputs, images)
-        gen_content_loss = gen_content_loss * self.cfg.CONTENT_LOSS_WEIGHT
+        gen_content_loss = gen_content_loss * self.cfg.LOSS.CONTENT_LOSS_WEIGHT
         gen_loss += gen_content_loss
 
         # generator style loss
         gen_style_loss = self.style_loss(outputs * masks, images * masks)
-        gen_style_loss = gen_style_loss * self.cfg.STYLE_LOSS_WEIGHT
+        gen_style_loss = gen_style_loss * self.cfg.LOSS.STYLE_LOSS_WEIGHT
         gen_loss += gen_style_loss
 
         # create logs

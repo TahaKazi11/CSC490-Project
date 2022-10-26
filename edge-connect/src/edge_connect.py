@@ -30,7 +30,7 @@ class EdgeConnect():
         self.inpaint_model = InpaintingModel(cfg).to(self.device)
 
         self.psnr = PSNR(255.0).to(self.device)
-        self.edgeacc = EdgeAccuracy(cfg.EDGE_THRESHOLD).to(self.device)
+        self.edgeacc = EdgeAccuracy(cfg.LOSS.EDGE_THRESHOLD).to(self.device)
 
         train_flist = cfg.TRAIN_FLIST.split('/')[1]
         
@@ -387,7 +387,7 @@ class EdgeConnect():
             iteration = it
 
         image_per_row = 2
-        if self.cfg.SAMPLE_SIZE <= 6:
+        if self.cfg.LOGGING.SAMPLE_SIZE <= 6:
             image_per_row = 1
         images = stitch_images(
             self.postprocess(images),

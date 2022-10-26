@@ -8,8 +8,17 @@ GPU:                            # list of gpu ids
   - 0                        
 DEBUG: 0                        # turns on debugging mode
 VERBOSE: 0                      # turns on verbose mode in the output console
-DEVICE: cuda:0
+DEVICE: rocm:0
 NUM_WORKERS: 0
+PATH: /home/thomas/Documents/school/csc490/CSC490-PROJECT/output
+
+TRAIN_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/images
+TRAIN_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/edges
+TRAIN_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/masks
+
+VAL_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/images
+VAL_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/edges
+VAL_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/masks
 
 SOLVER:
   LR: 0.0001                      # learning rate
