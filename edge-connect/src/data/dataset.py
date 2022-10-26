@@ -1,18 +1,16 @@
+import cv2
 import glob
-import hyrda
+import hydra
 import os
 import random
-import scipy
 import torch
 import torchvision
-import imageio.v3 as iio
 import numpy as np
 import torchvision.transforms.functional as F
 
 from omegaconf import DictConfig, OmegaConf
-from PIL import image
+from PIL import Image
 from skimage.feature import canny
-from skimage.color import rgb2gray, gray2rgb
 from torch.utils.data import DataLoader
 
 """
@@ -29,8 +27,14 @@ class Dataset(torch.utils.data.Dataset):
         self.edge_data = self.load_flist(edge_flist)
         self.mask_data = self.load_flist(mask_flist)
 
-        self.input_size = cfg.INPUT_SIZE
-        self.sigma = cfg.SIGMA
+        # for i in range(len(self.data)):
+        #     mask_name = self.mask_data[i].split('/')[-1]
+        #     img_name = self.data[i].split('/')[-1]
+        #     if (mask_name != img_name):
+        #         print("issue:\n" + mask_name + '\n' + img_name + '\n\n')
+
+        self.input_size = cfg.SOLVER.INPUT_SIZE
+        self.sigma = cfg.SOLVER.SIGMA
         self.edge = cfg.EDGE
         self.mask = cfg.MASK
         self.nms = cfg.NMS
@@ -44,11 +48,14 @@ class Dataset(torch.utils.data.Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        return 0
+        try:
+            item = self.load_item(index)
+        except Exception as e:
+            print(e)
+            print('loading error: ' + self.data[index])
+            item = self.load_item(0)
 
-    def load_name(self, index):
-        name = self.data[index]
-        return os.path.basename(name)
+        return item
 
     def load_item(self, index):
         size = self.input_size
@@ -56,22 +63,18 @@ class Dataset(torch.utils.data.Dataset):
             size = 256
 
         # load image
-        img = iio.imread(self.data[index], index=None)
-
-        # ensure img is RGB
-        if (img.shape) < 3:
-            img = gray2rgb(img)
-
+        img = cv2.imread(self.data[index], cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        
         # resize/crop if need be
         if size != 0:
-            img = self.resize(img, size, size)
-
-        img_gray = rgb2gray(img)
+            img = cv2.resize(img, (size, size))
+    
+        img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
         # load maskilen
-        mask_filename = self.load_name(index)
-        mask_path = "/".join(self.mask_data[0].split("/")[0:-1]) + "/" + mask_filename
-        mask = self.load_mask(img, index, mask_filename)
+        mask = self.load_mask(img, index, self.mask_data[index])
 
         # load edge
         edge = self.load_edge(img_gray, index, mask)
@@ -105,12 +108,12 @@ class Dataset(torch.utils.data.Dataset):
         # external
         else:
             imgh, imgw = img.shape[0:2]
-            edge = iio.imread(self.edge_data[index])
-            edge = self.resize(edge, imgh, imgw)
+            edge = cv2.imread(self.edge_data[index], cv2.IMAGE_GRAYSCALE)
+            edge = cv2.resize(edge, (imgh, imgw))
 
             # non-max suppression
-            # if self.nms == 1:
-            #    edge = edge * canny(img, sigma=sigma, mask=mask)
+            if self.nms == 1:
+               edge = edge * canny(img, sigma=sigma, mask=mask)
 
             return edge
 
@@ -126,8 +129,8 @@ class Dataset(torch.utils.data.Dataset):
         mask_type = self.mask
 
         if f is not None:
-            mask = iio.imread(f)
-            mask = self.resize(mask, imgh, imgw)
+            mask = cv2.imread(f, cv2.IMREAD_GRAYSCALE)
+            mask = cv2.resize(mask, (imgh, imgw))
             mask = (mask > 0).astype(np.uint8) * 255  # threshold due to interpolation
             return mask
 
@@ -158,16 +161,15 @@ class Dataset(torch.utils.data.Dataset):
         # external
         if mask_type == 3:
             mask_index = random.randint(0, len(self.mask_data) - 1)
-            mask = imread(self.mask_data[mask_index])
-            mask = self.resize(mask, imgh, imgw)
+            mask = cv2.imread(self.mask_data[mask_index], cv2.IMREAD_GRAYSCALE)
+            mask = cv2.resize(mask, (imgh, imgw))
             mask = (mask > 0).astype(np.uint8) * 255  # threshold due to interpolation
             return mask
 
         # test mode: load mask non random
         if mask_type == 6:
-            mask = imread(self.mask_data[index])
-            mask = self.resize(mask, imgh, imgw, centerCrop=False)
-            mask = rgb2gray(mask)
+            mask = cv2.imread(self.mask_data[index], cv2.IMREAD_GRAYSCALE)
+            mask = self.resize(mask, (imgh, imgw))
             mask = (mask > 0).astype(np.uint8) * 255
             return mask
 
@@ -175,18 +177,6 @@ class Dataset(torch.utils.data.Dataset):
         img = Image.fromarray(img)
         img_t = F.to_tensor(img).float()
         return img_t
-
-    def resize(self, img, height, width, centerCrop=True):
-        imgh, imgw = img.shape[0:2]
-
-        if centerCrop and imgh != imgw:
-            # center crop
-            side = np.minimum(imgh, imgw)
-            j = (imgh - side) // 2
-            i = (imgw - side) // 2
-            img = img[j : j + side, i : i + side, ...]
-
-        return Image.fromarray(img).resize(size=(height, width))
 
     def load_flist(self, flist):
 

@@ -9,7 +9,7 @@ from omegaconf import DictConfig, OmegaConf
 from shutil import copyfile
 from src.edge_connect import EdgeConnect
 
-@hydra.main(version_base=None, config_path="conf", config_name="cfg")
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     # cuda visble devices
     os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in cfg.GPU)

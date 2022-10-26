@@ -1,1 +1,6 @@
 .DS_Store
+.vscode
+.metadata
+*__pycache__
+outputs 
+edge-connect/outputs

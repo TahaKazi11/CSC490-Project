@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from omgeaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from .networks import InpaintGenerator, EdgeGenerator, Discriminator
 from ..evaluators.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 
@@ -87,7 +87,7 @@ class EdgeModel(BaseModel):
         # discriminator input: (grayscale(1) + edge(1))
         generator = EdgeGenerator(use_spectral_norm=True)
         discriminator = Discriminator(
-            in_channels=2, use_sigmoid=cfg.GAN_LOSS != "hinge"
+            in_channels=2, use_sigmoid=cfg.LOSS.GAN_LOSS != "hinge"
         )
         if len(cfg.GPU) > 1:
             generator = nn.DataParallel(generator, cfg.GPU)
@@ -109,7 +109,7 @@ class EdgeModel(BaseModel):
 
         self.dis_optimizer = optim.Adam(
             params=discriminator.parameters(),
-            lr=float(cfg.SOVLER.LR) * float(cfg.SOLVER.D2G_LR),
+            lr=float(cfg.SOLVER.LR) * float(cfg.SOLVER.D2G_LR),
             betas=(cfg.SOLVER.BETA1, cfg.SOLVER.BETA2),
         )
 

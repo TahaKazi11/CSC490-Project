@@ -5,9 +5,9 @@ import numpy as np
 
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader
-from data.dataset import Dataset
-from evaluators.metrics import PSNR, EdgeAccuracy
-from models.models import EdgeModel, InpaintingModel
+from .data.dataset import Dataset
+from .evaluators.metrics import PSNR, EdgeAccuracy
+from .models.models import EdgeModel, InpaintingModel
 
 class EdgeConnect():
     def __init__(self, cfg):
@@ -41,7 +41,7 @@ class EdgeConnect():
             print(cfg.TRAIN_FLIST)
             self.train_dataset = Dataset(cfg, cfg.TRAIN_FLIST, cfg.TRAIN_EDGE_FLIST, cfg.TRAIN_MASK_FLIST, augment=True, training=True)
             self.val_dataset = Dataset(cfg, cfg.VAL_FLIST, cfg.VAL_EDGE_FLIST, cfg.VAL_MASK_FLIST, augment=False, training=True)
-            self.sample_iterator = self.val_dataset.create_iterator(cfg.SAMPLE_SIZE)
+            self.sample_iterator = self.val_dataset.create_iterator(cfg.LOGGING.SAMPLE_SIZE)
         
         self.samples_path = os.path.join(cfg.PATH, 'samples')
         self.results_path = os.path.join(cfg.PATH, 'results')
@@ -411,7 +411,7 @@ class EdgeConnect():
             f.write('%s\n' % ' '.join([str(item[1]) for item in logs]))
 
     def cuda(self, *args):
-        return (item.to(self.self.device) for item in args)
+        return (item.to(self.device) for item in args)
 
     def postprocess(self, img):
         # [0, 1] => [0, 255]
