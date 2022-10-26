@@ -11,6 +11,8 @@ from .evaluators.metrics import PSNR, EdgeAccuracy
 from .models.models import EdgeModel, InpaintingModel
 from .utils.utils import Progbar
 
+import torch.profiler
+
 class EdgeConnect():
     def __init__(self, cfg):
         self.cfg = cfg
@@ -102,119 +104,134 @@ class EdgeConnect():
 
             progbar = Progbar(total, width=20, stateful_metrics=['epoch', 'iter'])
 
-            for items in train_loader:
-                self.edge_model.train()
-                self.inpaint_model.train()
+            with torch.profiler.profile(
+                activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
+                schedule=torch.profiler.schedule(wait=1, warmup=2, active=7),
+                on_trace_ready=torch.profiler.tensorboard_trace_handler('./tensor_log/model'),
+                use_cuda=True
+            ) as profiler:
 
-                images, images_gray, edges, masks = self.cuda(*items)
+                for items in train_loader:
+                
+                    self.edge_model.train()
+                    self.inpaint_model.train()
 
-                # edge model
-                if model == 1:
-                    # train
-                    outputs, gen_loss, dis_loss, logs = self.edge_model.process(images_gray, edges, masks)
+                    with torch.profiler.record_function("move data to cuda"):
+                        images, images_gray, edges, masks = self.cuda(*items)
 
-                    # metrics
-                    precision, recall = self.edgeacc(edges * masks, outputs * masks)
-                    logs.append(('precision', precision.item()))
-                    logs.append(('recall', recall.item()))
+                    # edge model
+                    if model == 1:
+                        # train
+                        with torch.profiler.record_function("model"):
+                            outputs, gen_loss, dis_loss, logs = self.edge_model.process(images_gray, edges, masks)
 
-                    # backward
-                    self.edge_model.backward(gen_loss, dis_loss)
-                    iteration = self.edge_model.iteration
+                        # metrics
+                        with torch.profiler.record_function("metrics"):
+                            precision, recall = self.edgeacc(edges * masks, outputs * masks)
+                            logs.append(('precision', precision.item()))
+                            logs.append(('recall', recall.item()))
 
-
-                # inpaint model
-                elif model == 2:
-                    # train
-                    outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, edges, masks)
-                    outputs_merged = (outputs * masks) + (images * (1 - masks))
-
-                    # metrics
-                    psnr = self.psnr(self.postprocess(images), self.postprocess(outputs_merged))
-                    mae = (torch.sum(torch.abs(images - outputs_merged)) / torch.sum(images)).float()
-                    logs.append(('psnr', psnr.item()))
-                    logs.append(('mae', mae.item()))
-
-                    # backward
-                    self.inpaint_model.backward(gen_loss, dis_loss)
-                    iteration = self.inpaint_model.iteration
+                        # backward
+                        with torch.profiler.record_function("backprop"):
+                            self.edge_model.backward(gen_loss, dis_loss)
+                            iteration = self.edge_model.iteration
 
 
-                # inpaint with edge model
-                elif model == 3:
-                    # train
-                    if True or np.random.binomial(1, 0.5) > 0:
-                        outputs = self.edge_model(images_gray, edges, masks)
-                        outputs = outputs * masks + edges * (1 - masks)
+                    # inpaint model
+                    elif model == 2:
+                        # train
+                        outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, edges, masks)
+                        outputs_merged = (outputs * masks) + (images * (1 - masks))
+
+                        # metrics
+                        psnr = self.psnr(self.postprocess(images), self.postprocess(outputs_merged))
+                        mae = (torch.sum(torch.abs(images - outputs_merged)) / torch.sum(images)).float()
+                        logs.append(('psnr', psnr.item()))
+                        logs.append(('mae', mae.item()))
+
+                        # backward
+                        self.inpaint_model.backward(gen_loss, dis_loss)
+                        iteration = self.inpaint_model.iteration
+
+
+                    # inpaint with edge model
+                    elif model == 3:
+                        # train
+                        if True or np.random.binomial(1, 0.5) > 0:
+                            outputs = self.edge_model(images_gray, edges, masks)
+                            outputs = outputs * masks + edges * (1 - masks)
+                        else:
+                            outputs = edges
+
+                        outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, outputs.detach(), masks)
+                        outputs_merged = (outputs * masks) + (images * (1 - masks))
+
+                        # metrics
+                        psnr = self.psnr(self.postprocess(images), self.postprocess(outputs_merged))
+                        mae = (torch.sum(torch.abs(images - outputs_merged)) / torch.sum(images)).float()
+                        logs.append(('psnr', psnr.item()))
+                        logs.append(('mae', mae.item()))
+
+                        # backward
+                        self.inpaint_model.backward(gen_loss, dis_loss)
+                        iteration = self.inpaint_model.iteration
+
+
+                    # joint model
                     else:
-                        outputs = edges
+                        # train
+                        e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.process(images_gray, edges, masks)
+                        e_outputs = e_outputs * masks + edges * (1 - masks)
+                        i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.process(images, e_outputs, masks)
+                        outputs_merged = (i_outputs * masks) + (images * (1 - masks))
 
-                    outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, outputs.detach(), masks)
-                    outputs_merged = (outputs * masks) + (images * (1 - masks))
+                        # metrics
+                        psnr = self.psnr(self.postprocess(images), self.postprocess(outputs_merged))
+                        mae = (torch.sum(torch.abs(images - outputs_merged)) / torch.sum(images)).float()
+                        precision, recall = self.edgeacc(edges * masks, e_outputs * masks)
+                        e_logs.append(('pre', precision.item()))
+                        e_logs.append(('rec', recall.item()))
+                        i_logs.append(('psnr', psnr.item()))
+                        i_logs.append(('mae', mae.item()))
+                        logs = e_logs + i_logs
 
-                    # metrics
-                    psnr = self.psnr(self.postprocess(images), self.postprocess(outputs_merged))
-                    mae = (torch.sum(torch.abs(images - outputs_merged)) / torch.sum(images)).float()
-                    logs.append(('psnr', psnr.item()))
-                    logs.append(('mae', mae.item()))
-
-                    # backward
-                    self.inpaint_model.backward(gen_loss, dis_loss)
-                    iteration = self.inpaint_model.iteration
-
-
-                # joint model
-                else:
-                    # train
-                    e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.process(images_gray, edges, masks)
-                    e_outputs = e_outputs * masks + edges * (1 - masks)
-                    i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.process(images, e_outputs, masks)
-                    outputs_merged = (i_outputs * masks) + (images * (1 - masks))
-
-                    # metrics
-                    psnr = self.psnr(self.postprocess(images), self.postprocess(outputs_merged))
-                    mae = (torch.sum(torch.abs(images - outputs_merged)) / torch.sum(images)).float()
-                    precision, recall = self.edgeacc(edges * masks, e_outputs * masks)
-                    e_logs.append(('pre', precision.item()))
-                    e_logs.append(('rec', recall.item()))
-                    i_logs.append(('psnr', psnr.item()))
-                    i_logs.append(('mae', mae.item()))
-                    logs = e_logs + i_logs
-
-                    # backward
-                    self.inpaint_model.backward(i_gen_loss, i_dis_loss)
-                    self.edge_model.backward(e_gen_loss, e_dis_loss)
-                    iteration = self.inpaint_model.iteration
+                        # backward
+                        self.inpaint_model.backward(i_gen_loss, i_dis_loss)
+                        self.edge_model.backward(e_gen_loss, e_dis_loss)
+                        iteration = self.inpaint_model.iteration
 
 
-                if iteration >= max_iteration:
-                    keep_training = False
-                    break
+                    with torch.profiler.record_function("logging"):
+                        if iteration >= max_iteration:
+                            keep_training = False
+                            break
 
-                logs = [
-                    ("epoch", epoch),
-                    ("iter", iteration),
-                ] + logs
+                        logs = [
+                            ("epoch", epoch),
+                            ("iter", iteration),
+                        ] + logs
 
-                progbar.add(len(images), values=logs if self.cfg.VERBOSE else [x for x in logs if not x[0].startswith('l_')])
+                        progbar.add(len(images), values=logs if self.cfg.VERBOSE else [x for x in logs if not x[0].startswith('l_')])
 
-                # log model at checkpoints
-                if self.cfg.LOGGING.LOG_INTERVAL and iteration % self.cfg.LOGGING.LOG_INTERVAL == 0:
-                    self.log(logs)
+                        # log model at checkpoints
+                        if self.cfg.LOGGING.LOG_INTERVAL and iteration % self.cfg.LOGGING.LOG_INTERVAL == 0:
+                            self.log(logs)
 
-                # sample model at checkpoints
-                if self.cfg.LOGGING.SAMPLE_INTERVAL and iteration % self.cfg.LOGGING.SAMPLE_INTERVAL == 0:
-                    print('SAMPLINGS')
-                    self.sample()
+                        # sample model at checkpoints
+                        if self.cfg.LOGGING.SAMPLE_INTERVAL and iteration % self.cfg.LOGGING.SAMPLE_INTERVAL == 0:
+                            print('SAMPLINGS')
+                            self.sample()
 
-                # evaluate model at checkpoints
-                if self.cfg.LOGGING.EVAL_INTERVAL and iteration % self.cfg.LOGGING.EVAL_INTERVAL == 0:
-                    print('\nstart eval...\n')
-                    self.eval()
+                        # evaluate model at checkpoints
+                        if self.cfg.LOGGING.EVAL_INTERVAL and iteration % self.cfg.LOGGING.EVAL_INTERVAL == 0:
+                            print('\nstart eval...\n')
+                            self.eval()
 
-                # save model at checkpoints
-                if self.cfg.LOGGING.SAVE_INTERVAL and iteration % self.cfg.LOGGING.SAVE_INTERVAL == 0:
-                    self.save()
+                        # save model at checkpoints
+                        if self.cfg.LOGGING.SAVE_INTERVAL and iteration % self.cfg.LOGGING.SAVE_INTERVAL == 0:
+                            self.save()
+                    
+                    profiler.step()
 
         print('\nEnd training....')
 
