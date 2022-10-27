@@ -106,9 +106,8 @@ class EdgeConnect():
 
             with torch.profiler.profile(
                 activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
-                schedule=torch.profiler.schedule(wait=1, warmup=2, active=7),
+                schedule=torch.profiler.schedule(wait=5, warmup=5, active=10, repeat=10),
                 on_trace_ready=torch.profiler.tensorboard_trace_handler('./tensor_log/model'),
-                use_cuda=True
             ) as profiler:
 
                 for items in train_loader:
@@ -116,7 +115,7 @@ class EdgeConnect():
                     self.edge_model.train()
                     self.inpaint_model.train()
 
-                    with torch.profiler.record_function("move data to cuda"):
+                    with torch.profiler.record_function("moveData"):
                         images, images_gray, edges, masks = self.cuda(*items)
 
                     # edge model
