@@ -40,6 +40,11 @@ random_aug_images_dir = curr_dir + '/random_augments/images'
 random_aug_masks_dir = curr_dir + '/random_augments/masks'
 
 
+# Augmentation related parameters
+aug_img_num = 7500
+default_magnitude = 0.7
+
+
 # Copy 5 images to the original/images folder to test augmentations
 def copy_to_original_img(num):
     for i in range(num):
@@ -84,7 +89,7 @@ def apply_distortion_augment():
     clear_image_directory(distortion_images_dir)
     distortion_pipeline = Augmentor.Pipeline(original_images_dir, distortion_images_dir)
     distortion_pipeline.ground_truth(original_masks_dir)
-    distortion_pipeline.random_distortion(1, 5, 5, magnitude=8)
+    distortion_pipeline.random_distortion(1, 5, 5, magnitude=default_magnitude*10)
     distortion_pipeline.process()
 # distortion_pipeline.sample(5)
 
@@ -93,7 +98,7 @@ def apply_crop_augment():
     clear_image_directory(crop_images_dir)
     crop_pipeline = Augmentor.Pipeline(original_images_dir, crop_images_dir)
     crop_pipeline.ground_truth(original_masks_dir)
-    crop_pipeline.crop_random(1, 0.8, False)
+    crop_pipeline.crop_random(1, default_magnitude, False)
     crop_pipeline.process()
 # testing: crop_pipeline.resize(1, 256, 256, )
 
@@ -111,7 +116,7 @@ def apply_skew_augment():
     clear_image_directory(skew_images_dir)
     skew_pipeline = Augmentor.Pipeline(original_images_dir, skew_images_dir)
     skew_pipeline.ground_truth(original_masks_dir)
-    skew_pipeline.skew_corner(1, 0.7)
+    skew_pipeline.skew_corner(1, default_magnitude)
     skew_pipeline.process()
 
 # Shearing tilts an image along one of its sides. The can be in the x-axis or y-axis direction
@@ -119,7 +124,7 @@ def apply_shear_augment():
     clear_image_directory(shear_images_dir)
     shear_pipeline = Augmentor.Pipeline(original_images_dir, shear_images_dir)
     shear_pipeline.ground_truth(original_masks_dir)
-    shear_pipeline.shear(1, 15, 15)
+    shear_pipeline.shear(1, 25 * default_magnitude, 25 * default_magnitude)
     shear_pipeline.process()
 
 # Apply random brightness augment
@@ -145,19 +150,20 @@ def apply_random_augments(p, m, dir_name):
     random_aug_pipeline = Augmentor.Pipeline(original_images_dir, image_dir_path)
     random_aug_pipeline.ground_truth(original_masks_dir)
     
-    # random_aug_pipeline.rotate_random_90(p)
+    random_aug_pipeline.rotate_random_90(p)
     random_aug_pipeline.flip_left_right(p)
     random_aug_pipeline.flip_top_bottom(p)
     random_aug_pipeline.random_distortion(p, 5, 5, m * 10)  # Grid width and height need to be between 2 to 10, magnitude is between 1 to 10
-    # random_aug_pipeline.random_brightness(p, 1 - m, 1 + m)  # Need to specify min and max brightness where 1 is the original
+    random_aug_pipeline.random_brightness(p, 1 - m, 1 + m)  # Need to specify min and max brightness where 1 is the original
     random_aug_pipeline.skew_corner(p, m)
     random_aug_pipeline.skew_tilt(p, m)
     random_aug_pipeline.shear(p, 25 * m, 25 * m)            # Angles more than 25 will cause unpredictable behaviour
     # random_aug_pipeline.crop_random(p, m)                   # Crop percentages
+    random_aug_pipeline.zoom(p, 1 + 0.5 * m, 1 + 0.5 * m)
     random_aug_pipeline.resize(1, 256, 256)
-    random_aug_pipeline.process()
+    # random_aug_pipeline.process()
+    random_aug_pipeline.sample(aug_img_num)
     separate_images_and_masks(dir_name)
-    # random_aug_pipeline.sample(5)
     # print("selected augments: " + str(selected_augments))
     
 def separate_images_and_masks(dirname):
@@ -175,19 +181,19 @@ def separate_images_and_masks(dirname):
             os.rename(images_dir + '/' + i, images_dir + '/' + new_name)
 
 
-load_original_images()
+load_original_images(1000)
 # apply_random_augments(1, 0.8, "random_augments")
-apply_random_augments(0.6, 0.6, "p6m6")
-apply_random_augments(0.6, 0.7, "p6m7")
-apply_random_augments(0.6, 0.8, "p6m8")
+apply_random_augments(0.2, 0.6, "p2m6")
+apply_random_augments(0.2, 0.7, "p2m7")
+apply_random_augments(0.2, 0.8, "p2m8")
 
-apply_random_augments(0.7, 0.6, "p7m6")
-apply_random_augments(0.7, 0.7, "p7m7")
-apply_random_augments(0.7, 0.8, "p7m8")
+apply_random_augments(0.3, 0.6, "p3m6")
+apply_random_augments(0.3, 0.7, "p3m7")
+apply_random_augments(0.3, 0.8, "p3m8")
 
-apply_random_augments(0.8, 0.6, "p8m6")
-apply_random_augments(0.8, 0.7, "p8m7")
-apply_random_augments(0.8, 0.8, "p8m8")
+apply_random_augments(0.4, 0.6, "p4m6")
+apply_random_augments(0.4, 0.7, "p4m7")
+apply_random_augments(0.4, 0.8, "p4m8")
 
 # apply_random_augments(0.7, 0.8, "random_augments")
 # apply_shear_augment()
