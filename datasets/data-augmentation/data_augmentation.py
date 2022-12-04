@@ -69,8 +69,9 @@ def load_original_images(n=1000):
 def apply_rotation_augment():
     clear_image_directory(rotation_images_dir)
     rotation_pipeline = Augmentor.Pipeline(original_images_dir, rotation_images_dir)
-    rotation_pipeline.ground_truth(original_masks_dir)
-    rotation_pipeline.rotate_random_90(1)
+    # rotation_pipeline.ground_truth(original_masks_dir)
+    # rotation_pipeline.rotate_random_90(1)
+    rotation_pipeline.rotate90(1)
     rotation_pipeline.process()
 
 # Generate 1000 images with random rotation applied  
@@ -100,7 +101,7 @@ def apply_crop_augment():
 def apply_flip_augment():
     clear_image_directory(flip_random_images_dir)
     flip_random_pipeline = Augmentor.Pipeline(original_images_dir, flip_random_images_dir)
-    flip_random_pipeline.ground_truth(original_masks_dir)
+    # flip_random_pipeline.ground_truth(original_masks_dir)
     # flip_random_pipeline.flip_random(1)
     flip_random_pipeline.flip_left_right(1)
     flip_random_pipeline.process()
@@ -135,13 +136,16 @@ def apply_brightness_augment():
 # m: magnitude (0 - 1)
 # dir_name: name of directory containing images and masks directories
 def apply_random_augments(p, m, dir_name):
-    clear_image_directory(curr_dir + '/' + dir_name + '/images')
-    clear_image_directory(curr_dir + '/' + dir_name + '/masks')
+    image_dir_path = curr_dir + '/' + dir_name + '/images'
+    masks_dir_path = curr_dir + '/' + dir_name + '/masks'
 
-    random_aug_pipeline = Augmentor.Pipeline(original_images_dir, random_aug_images_dir)
+    clear_image_directory(image_dir_path)
+    clear_image_directory(masks_dir_path)
+
+    random_aug_pipeline = Augmentor.Pipeline(original_images_dir, image_dir_path)
     random_aug_pipeline.ground_truth(original_masks_dir)
     
-    random_aug_pipeline.rotate_random_90(p)
+    # random_aug_pipeline.rotate_random_90(p)
     random_aug_pipeline.flip_left_right(p)
     random_aug_pipeline.flip_top_bottom(p)
     random_aug_pipeline.random_distortion(p, 5, 5, m * 10)  # Grid width and height need to be between 2 to 10, magnitude is between 1 to 10
@@ -149,7 +153,7 @@ def apply_random_augments(p, m, dir_name):
     random_aug_pipeline.skew_corner(p, m)
     random_aug_pipeline.skew_tilt(p, m)
     random_aug_pipeline.shear(p, 25 * m, 25 * m)            # Angles more than 25 will cause unpredictable behaviour
-    random_aug_pipeline.crop_random(p, m)                   # Crop percentages
+    # random_aug_pipeline.crop_random(p, m)                   # Crop percentages
     random_aug_pipeline.resize(1, 256, 256)
     random_aug_pipeline.process()
     separate_images_and_masks(dir_name)
@@ -161,6 +165,7 @@ def separate_images_and_masks(dirname):
     masks_dir = curr_dir + "/" + dirname + "/masks"
 
     image_list = sorted(os.listdir(images_dir))
+    # print()
     for i in image_list:
         if (i.startswith("_groundtruth_(1)_images_")):
             new_name = i.split("_groundtruth_(1)_images_")[1]
@@ -170,22 +175,29 @@ def separate_images_and_masks(dirname):
             os.rename(images_dir + '/' + i, images_dir + '/' + new_name)
 
 
-load_original_images(1000)
+load_original_images()
 # apply_random_augments(1, 0.8, "random_augments")
-# apply_random_augments(0.6, 0.6, "p6m6")
-# apply_random_augments(0.6, 0.7, "p6m7")
-# apply_random_augments(0.6, 0.8, "p6m8")
+apply_random_augments(0.6, 0.6, "p6m6")
+apply_random_augments(0.6, 0.7, "p6m7")
+apply_random_augments(0.6, 0.8, "p6m8")
 
-# apply_random_augments(0.7, 0.6, "p7m6")
-# apply_random_augments(0.7, 0.7, "p7m7")
-# apply_random_augments(0.7, 0.8, "p7m8")
+apply_random_augments(0.7, 0.6, "p7m6")
+apply_random_augments(0.7, 0.7, "p7m7")
+apply_random_augments(0.7, 0.8, "p7m8")
 
-# apply_random_augments(0.8, 0.6, "p8m6")
-# apply_random_augments(0.8, 0.7, "p8m7")
-# apply_random_augments(0.8, 0.8, "p8m8")
+apply_random_augments(0.8, 0.6, "p8m6")
+apply_random_augments(0.8, 0.7, "p8m7")
+apply_random_augments(0.8, 0.8, "p8m8")
 
-
+# apply_random_augments(0.7, 0.8, "random_augments")
 # apply_shear_augment()
 # apply_brightness_augment()
-# apply_random_augments(1, 0.8)
-# clear_image_directory(random_aug_images_dir)
+# apply_flip_augment()
+# apply_distortion_augment()
+# apply_shear_augment()
+# apply_skew_augment()
+# apply_random_augments(1, 0.8, "random_augments")
+# clear_image_directory(original_images_dir)
+# clear_image_directory(original_masks_dir)
+# clear_image_directory(curr_dir + "/p6m6/images")
+# clear_image_directory(curr_dir + "/p6m6/masks")
