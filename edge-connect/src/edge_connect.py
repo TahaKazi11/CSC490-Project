@@ -203,11 +203,6 @@ class EdgeConnect():
                 if self.cfg.LOGGING.LOG_INTERVAL and iteration % self.cfg.LOGGING.LOG_INTERVAL == 0:
                     self.log(logs)
 
-                # sample model at checkpoints
-                if self.cfg.LOGGING.SAMPLE_INTERVAL and iteration % self.cfg.LOGGING.SAMPLE_INTERVAL == 0:
-                    print('SAMPLINGS')
-                    self.sample()
-
                 # evaluate model at checkpoints
                 if self.cfg.LOGGING.EVAL_INTERVAL and iteration % self.cfg.LOGGING.EVAL_INTERVAL == 0:
                     print('\nstart eval...\n')
@@ -351,63 +346,6 @@ class EdgeConnect():
                 cv2.imsave(masked, os.path.join(self.results_path, fname + '_masked.' + fext))
 
         print('\nEnd test....')
-
-    def sample(self, it=None):
-        # do not sample when validation set is empty
-        if len(self.val_dataset) == 0:
-            print('VALIDATION SET IS EMPTY')
-            return
-
-        self.edge_model.eval()
-        self.inpaint_model.eval()
-        model = self.cfg.MODEL
-        items = next(self.sample_iterator)
-        images, images_gray, edges, masks = self.cuda(*items)
-         # edge model
-        if model == 1:
-            iteration = self.edge_model.iteration
-            inputs = (images_gray * (1 - masks)) + masks
-            outputs = self.edge_model(images_gray, edges, masks)
-            outputs_merged = (outputs * masks) + (edges * (1 - masks))
-
-        # inpaint model
-        elif model == 2:
-            iteration = self.inpaint_model.iteration
-            inputs = (images * (1 - masks)) + masks
-            outputs = self.inpaint_model(images, edges, masks)
-            outputs_merged = (outputs * masks) + (images * (1 - masks))
-
-        # inpaint with edge model / joint model
-        else:
-            iteration = self.inpaint_model.iteration
-            inputs = (images * (1 - masks)) + masks
-            outputs = self.edge_model(images_gray, edges, masks).detach()
-            edges = (outputs * masks + edges * (1 - masks)).detach()
-            outputs = self.inpaint_model(images, edges, masks)
-            outputs_merged = (outputs * masks) + (images * (1 - masks))
-
-        if it is not None:
-            iteration = it
-
-        image_per_row = 2
-        if self.cfg.LOGGING.SAMPLE_SIZE <= 6:
-            image_per_row = 1
-        images = stitch_images(
-            self.postprocess(images),
-            self.postprocess(inputs),
-            self.postprocess(edges),
-            self.postprocess(outputs),
-            self.postprocess(outputs_merged),
-            img_per_row = image_per_row
-        )
-
-
-        #path = os.path.join(self.samples_path, self.model_name)
-        path = self.log_images_folder
-        name = os.path.join(path, str(iteration).zfill(5) + ".png")
-        create_dir(path)
-        print('\nsaving sample ' + name)
-        images.save(name)
 
     def log(self, logs):
         with open(self.log_file, 'a') as f:

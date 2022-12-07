@@ -7,17 +7,23 @@ Two datasets are used for training each of the models. Furthermore, we also util
 #### HyperKvasir
 * [Download URL](https://datasets.simula.no/hyper-kvasir)
 * [Paper Reference](https://www.nature.com/articles/s41597-020-00622-y)
+
 Unlabeled Images: 99417 GI-tract images of varying resolution
+
 Segmented Images: 1000 polyp images and respective segmentation mask at varying resolutions
+
+NOTE: the unlabeled images are not provided in the repo as there are too many images to effectively store on git.
 
 #### Synth. Segmentation Masks
 * [Auxilliary Seg Mask Dataset](https://zenodo.org/record/5537151#.Y1b3SEzMKUk)
 * [Paper Reference](https://arxiv.org/abs/2106.04463)
+
 10000 synthesized poylp segmentation masks at varying resolution
 
 For examples of the datasets, please refer to the datasets directory.
 
-## PolypConnect:
+## PolypConnect (THOMAS):
+[Paper Reference](https://arxiv.org/abs/2205.15413).
 ### Pipeline:
 The polypconnect model for inpainting polyps onto colon images is a 4-step pipeline:
 <ol>
@@ -62,6 +68,20 @@ Checkpoints are logged to the directory specified by the PATH option in the conf
 To test the model, some modification to the config.yaml file is required. This largely consits of changing the MODE parameter to 2. Again, command to start testing is:
 
 `python3 ./edge-connect/main.py --config-path ../configs/<config dir you created>.conf`
+
+### Sampling:
+To see the model in action, a python script called "sample.py" is provided in edge-connect. This script it run in one of two ways:
+
+`python3 ./edge-connect/sample.py <base colon image path> <polyp image path> <mask image path> 0`
+`python3 ./edge-connect/sample.py <base colon image path> <polyp edge path> <mask image path> 1`
+
+These will take in the inputs, concatenate them, and feed them to the polyp connect model which will then output 4 images:
+* test.jpg - final output
+* merged.jpg - merged final edges
+* clean.jpg - resized base colon image
+* seg.jpg - resized mask image
+
+We support both polyp image paths and polyp edge paths to allow for sample with the origional step 3 or our proposed step 3.
 
 ## Pix2Pix Model:
 We used the Pix2Pix model for our image-to-image translation (I2I) method, where we wanted to translate an image of a polyp segmentation mask to into an polyp edge map. We used the Google Colab code they provided for training, we first used a script they provided in order to create paired images of segmentation masks and corresponding edge maps, that were provided, to feed into the model as training input. Finally, we then changed a few lines of code to feed our specific images. Provided below are the Google Colab codes that were used. We planned to use I2I, such that the current pipeline does not rely on real polyp images - unlike in Polypconnect, where Polypconnect needs real image data. After this, the edge map can be used to inpaint a polyp in the healthy colon.

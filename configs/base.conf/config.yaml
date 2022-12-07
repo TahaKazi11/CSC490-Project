@@ -8,20 +8,23 @@ GPU:                            # list of gpu ids
   - 0                        
 DEBUG: 1                        # turns on debugging mode
 VERBOSE: 0                      # turns on verbose mode in the output console
-DEVICE: cuda:0
-NUM_WORKERS: 8
-PATH: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/output/step2
+DEVICE: cuda:0                  # device to be running the model on
+NUM_WORKERS: 8                  # number of worker threads utilized in data loading.
+PATH: <PATH TO OUTPUT DIR>
 RESULTS: NULL
 
-TRAIN_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/images
-TRAIN_EDGE_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/edges
-TRAIN_MASK_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/masks
+TRAIN_FLIST: <PATH TO TRAINING SET IMAGES>
+TRAIN_EDGE_FLIST: <PATH TO TRAINING SET EDGES (can be nonexistant)>
+TRAIN_MASK_FLIST: <PATH TO TRAINING SET MASKS>
 
-VAL_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/images
-VAL_EDGE_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/edges
-VAL_MASK_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/masks
+VAL_FLIST: <PATH TO VAL SET IMAGES>
+VAL_EDGE_FLIST: <PATH TO VAL SET EDGES (can be nonexistant)>
+VAL_MASK_FLIST: <PATH TO VAL SET MASKS>
+
+TEST_FLIST: <PATH TO TEST SET IMAGES>
+TEST_EDGE_FLIST: <PATH TO TEST SET EDGES (can be nonexistant)>
+VATEST_MASK_FLIST: <PATH TO TEST SET MASKS>
  
-
 SOLVER:
   LR: 0.000001                      # learning rate
   D2G_LR: 0.1                     # discriminator/generator learning rate ratio
@@ -44,7 +47,5 @@ LOSS:
 
 LOGGING:
   SAVE_INTERVAL: 1000             # how many iterations to wait before saving model (0: never)
-  SAMPLE_INTERVAL: 0              # how many iterations to wait before sampling (0: never)
-  SAMPLE_SIZE: 12                 # number of images to sample
   EVAL_INTERVAL: 0                # how many iterations to wait before model evaluation (0: never)
   LOG_INTERVAL: 10                # how many iterations to wait before logging training status (0: never)
