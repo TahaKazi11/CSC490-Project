@@ -1,27 +1,29 @@
 MODE: 1                         # 1: train 2: test 3: eval
-MODEL: 1                        # 1: edge model 2: inpaint model 3: edge-inpaint model 4: joint model
+MODEL: 3                        # 1: edge model 2: inpaint model 3: edge-inpaint model 4: joint model
 MASK: 3                         # 1: random block 2: half 3: external 4: (external random block) 5: (external random block half)
 EDGE: 1                         # 1: canny 2: external
 NMS: 1                          # 0: no non-max-suppression 1: applies non-max-suppression on the external edges by multiplying by Canny
 SEED: 10                        # random seed
 GPU:                            # list of gpu ids
   - 0                        
-DEBUG: 0                        # turns on debugging mode
+DEBUG: 1                        # turns on debugging mode
 VERBOSE: 0                      # turns on verbose mode in the output console
-DEVICE: rocm:0
-NUM_WORKERS: 0
-PATH: /home/thomas/Documents/school/csc490/CSC490-PROJECT/output
+DEVICE: cuda:0
+NUM_WORKERS: 8
+PATH: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/output/step2
+RESULTS: NULL
 
-TRAIN_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/images
-TRAIN_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/edges
-TRAIN_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/masks
+TRAIN_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/images
+TRAIN_EDGE_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/edges
+TRAIN_MASK_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/masks
 
-VAL_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/images
-VAL_EDGE_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/edges
-VAL_MASK_FLIST: /home/thomas/Documents/school/csc490/CSC490-PROJECT/datasets/train/masks
+VAL_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/images
+VAL_EDGE_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/edges
+VAL_MASK_FLIST: /home/mayertho/projects/def-lakahrs/mayertho/CSC490-Project/datasets/train/masks
+ 
 
 SOLVER:
-  LR: 0.0001                      # learning rate
+  LR: 0.000001                      # learning rate
   D2G_LR: 0.1                     # discriminator/generator learning rate ratio
   BETA1: 0.0                      # adam optimizer beta1
   BETA2: 0.9                      # adam optimizer beta2
@@ -42,7 +44,7 @@ LOSS:
 
 LOGGING:
   SAVE_INTERVAL: 1000             # how many iterations to wait before saving model (0: never)
-  SAMPLE_INTERVAL: 1000           # how many iterations to wait before sampling (0: never)
+  SAMPLE_INTERVAL: 0              # how many iterations to wait before sampling (0: never)
   SAMPLE_SIZE: 12                 # number of images to sample
   EVAL_INTERVAL: 0                # how many iterations to wait before model evaluation (0: never)
   LOG_INTERVAL: 10                # how many iterations to wait before logging training status (0: never)

@@ -27,12 +27,6 @@ class Dataset(torch.utils.data.Dataset):
         self.edge_data = self.load_flist(edge_flist)
         self.mask_data = self.load_flist(mask_flist)
 
-        # for i in range(len(self.data)):
-        #     mask_name = self.mask_data[i].split('/')[-1]
-        #     img_name = self.data[i].split('/')[-1]
-        #     if (mask_name != img_name):
-        #         print("issue:\n" + mask_name + '\n' + img_name + '\n\n')
-
         self.input_size = cfg.SOLVER.INPUT_SIZE
         self.sigma = cfg.SOLVER.SIGMA
         self.edge = cfg.EDGE
@@ -65,8 +59,7 @@ class Dataset(torch.utils.data.Dataset):
         # load image
         img = cv2.imread(self.data[index], cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
-        
+         
         # resize/crop if need be
         if size != 0:
             img = cv2.resize(img, (size, size))
@@ -74,7 +67,7 @@ class Dataset(torch.utils.data.Dataset):
         img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
         # load maskilen
-        mask = self.load_mask(img, index, self.mask_data[index])
+        mask = self.load_mask(img, index, None)
 
         # load edge
         edge = self.load_edge(img_gray, index, mask)

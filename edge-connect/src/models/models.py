@@ -124,7 +124,9 @@ class EdgeModel(BaseModel):
         outputs = self(images, edges, masks)
         gen_loss = 0
         dis_loss = 0
-
+        
+        print(f"shape output: {outputs.shape}")
+        print(f"shape edges: {edges.shape}")
         # discriminator loss
         dis_input_real = torch.cat((images, edges), dim=1)
         dis_input_fake = torch.cat((images, outputs.detach()), dim=1)

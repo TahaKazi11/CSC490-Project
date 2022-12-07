@@ -148,7 +148,8 @@ class EdgeConnect():
                         outputs = outputs * masks + edges * (1 - masks)
                     else:
                         outputs = edges
-
+                    
+                    print(outputs.shape)
                     outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, outputs.detach(), masks)
                     outputs_merged = (outputs * masks) + (images * (1 - masks))
 
