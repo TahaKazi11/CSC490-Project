@@ -64,6 +64,8 @@ NOTE: the --config-path argument is relative to where main.py is which is why th
 
 Checkpoints are logged to the directory specified by the PATH option in the config.yaml files.
 
+#### Details:
+We begin training by utilizing a learning rate of 1e-4 as well as the defaults in the configs/base.conf/config.yaml. Note, at this step two GAN models must be trained seperately. One for the edge model (MODEL = 1) and one for inpaiting model (MODEL = 2).  Once this stop improving (metrics in the logs plateau), we resume training but now with a learning rate of 1e-5. Again we wait until the model converges. Then, we move to step two by reducing the learning rate to 1e-6 and removing the discriminator for the edge model (MODEL = 3). Once this converges, the model is done training.
 
 ### Testing:
 To test the model, some modification to the config.yaml file is required. This largely consits of changing the MODE parameter to 2. Again, command to start testing is:
