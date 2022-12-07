@@ -91,6 +91,11 @@ We used the Pix2Pix model for our image-to-image translation (I2I) method, where
 * [Google Colab Code 1](https://colab.research.google.com/drive/1oyL-fmNhVzOxzvKXhHM3B4wFDcGfIuao?usp=sharing) 
 * [Google Colab Code 2](https://colab.research.google.com/drive/1vxoApD4cHN2dE7ygtc6gdMeHFSVshpZF?authuser=5#scrollTo=yFw1kDQBx3LN)
 
+## Data Augmentation:
+Since we only have 1000 images in our dataset, our model is prone to overfit during training. We decided to use data augmentation to solve this issue. Data augmentation is a technique where transformations are applied to our original dataset, thus creating a larger variation of polyp images for training and fine-tuning of our model. These transforamtions include rotation, flipping vertically, flipping horizontally, random distortion, brightness, skew corner, skew tilt, shear and zoom, and they are applied in a chain with a probability of each transformation occurring and a magnitude specifying how severe these augmentations are. 
+
+The library that we used is Augmentor, it provides tools to aid the augmentation and artificial generation of image data for machine learning tasks. Running the script data_augmentation.py creates 7500 augmented images and their respective masks in each of the following directories: p2m6, p2m7, p2m8, p3m6, p3m7, p3m8, p4m6, p4m7 and p4m8, where p2 represents a probability of 0.2 and m8 represents a magnitude of 8/10. In directories rotation_augment, flip_random_augment, distortion_augment, brightness_augment, skew_augment, shear_augment and zoom_augment, an image and its mask is provided to demonstrate what each transformation looks like, with the original version being 0004a718-546c-41c2-9c69-c4685093a039.jpg in the directory original.
+
 ## Members:
 * Taha Kazi
 * Thomas Mayer
