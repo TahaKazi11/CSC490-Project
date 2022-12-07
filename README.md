@@ -24,6 +24,7 @@ For examples of the datasets, please refer to the datasets directory.
 
 ## PolypConnect (THOMAS):
 [Paper Reference](https://arxiv.org/abs/2205.15413).
+[Code Reference](https://github.com/andrefagereng/polyp-gan)
 ### Pipeline:
 The polypconnect model for inpainting polyps onto colon images is a 4-step pipeline:
 <ol>
