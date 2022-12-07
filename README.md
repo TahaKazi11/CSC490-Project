@@ -1,7 +1,7 @@
 # CSC490 - KVASIR Kings
 Exploring ML applications in colonoscopies through the HyperKvasir dataset. 
 
-Pix2Pix Model:
+## Pix2Pix Model:
 We used the Pix2Pix model for our image-to-image translation (I2I) method, where we wanted to translate an image of a polyp segmentation mask to into an polyp edge map. We used the Google Colab code they provided for training, we first used a script they provided in order to create paired images of segmentation masks and corresponding edge maps, that were provided, to feed into the model as training input. Finally, we then changed a few lines of code to feed our specific images. Provided below are the Google Colab codes that were used.
 
 ## Members:
