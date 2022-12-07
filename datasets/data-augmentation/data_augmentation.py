@@ -1,10 +1,6 @@
 import Augmentor
-import random
 import shutil
 import os
-from sklearn.pipeline import Pipeline
-
-from sqlalchemy import false
 
 
 """
