@@ -13,13 +13,13 @@ rotation, flipping vertically, flipping horizontally, random distortion, brightn
 The above 9 augmentations are applied in a chain with a probaility of each transformation getting applied and a magnitude specifying 
 how severe these transformations are applied
 
-This script first loads 1000 images and their masks into the original/images and original/masks folder. Then, data augmentations are applied
-to generate 7500 images and masks, which are saved in folders with names pxmy, for x in [2, 4], y in [6, 8], where p2 would mean transformations 
+This script first loads 1000 images and their masks into the original/images and original/masks directories. Then, data augmentations are applied
+to generate 7500 images and masks, which are saved in directories with names pxmy, for x in [2, 4], y in [6, 8], where p2 would mean transformations 
 have a probability of 0.2 of applying, and m8 would represent a magnitude of 8/10. 
 
-In folders rotation_augment, flip_random_augment, distortion_augment, brightness_augment, skew_augment, shear_augment and zoom_augment, 
+In directories rotation_augment, flip_random_augment, distortion_augment, brightness_augment, skew_augment, shear_augment and zoom_augment, 
 an image and mask of each augmentation is provided to demonstrate what each transformation looks like, with the original version being the first 
-image and mask in the original folder (0004a718-546c-41c2-9c69-c4685093a039.jpg)
+image and mask in the directories original (0004a718-546c-41c2-9c69-c4685093a039.jpg)
 """
 
 
@@ -61,37 +61,65 @@ random_aug_masks_dir = curr_dir + '/random_augments/masks'
 aug_img_num = 7500
 default_magnitude = 0.7
 
-
-# Copy images to the original/images folder as the original images before applying augmentations
+ 
 def copy_to_original_img(num):
+    """
+    Copy images to the original/images folder as the original images before applying augmentations
+
+    Arguemnts:
+        num: number of images to be copied
+    """
+
     for i in range(num):
         img_path = src_images_dir + '/' + src_images_list[i]
         shutil.copy(img_path, original_images_dir)
 
 
-# Copy masks to the original/masks as the original masks before applying augmentations
+
 def copy_to_original_masks(num):
+    """
+    Copy masks to the original/masks as the original masks before applying augmentations
+
+    Arguemnts:
+        num: number of images to be copied
+    """
+
     for i in range(num):
         img_path = src_masks_dir + '/' + src_masks_list[i]
         shutil.copy(img_path, original_masks_dir)
 
 
-# Remove all images in a directory
 def clear_image_directory(image_dir):
+    """
+    Remove all images in a directory
+
+    Arguemnts:
+        image_dir: name of the directory to be cleared
+    """
+
     [os.remove(image_dir + '/' + x) for x in os.listdir(image_dir)]
     print("Cleared images in " + image_dir)
 
 
-# Load n images into the original images and masks folders
 def load_original_images(n=1000):
+    """
+    Load n images into the original images and masks directories, the default value is 1000
+
+    Arguemnts:
+        n: number of images
+    """
+
     clear_image_directory(original_images_dir)
     clear_image_directory(original_masks_dir)
     copy_to_original_img(n)
     copy_to_original_masks(n)
 
 
-# Apply rotattion {90, 180, 270} degress randomly once on each image
 def apply_rotation_augment():
+    """
+    Apply rotation of 90 degress once on each image in the directory original
+    """
+
     clear_image_directory(rotation_images_dir)
     rotation_pipeline = Augmentor.Pipeline(original_images_dir, rotation_images_dir)
     rotation_pipeline.ground_truth(original_masks_dir)
@@ -100,8 +128,11 @@ def apply_rotation_augment():
     separate_images_and_masks("rotation_augment")
 
 
-# Apply random elastic distortions to randomly selected images and generate 5 of such images
 def apply_distortion_augment():
+    """
+    Apply random elastic distortions once to each image in the original directory
+    """
+
     clear_image_directory(distortion_images_dir)
     distortion_pipeline = Augmentor.Pipeline(original_images_dir, distortion_images_dir)
     distortion_pipeline.ground_truth(original_masks_dir)
@@ -110,27 +141,36 @@ def apply_distortion_augment():
     separate_images_and_masks("distortion_augment")
 
 
-# zoom images 
 def apply_zoom_augment():
+    """
+    Zoom images by a factor of 1.3 
+    """
+
     clear_image_directory(zoom_images_dir)
     zoom_pipeline = Augmentor.Pipeline(original_images_dir, zoom_images_dir)
     zoom_pipeline.ground_truth(original_masks_dir)
     zoom_pipeline.zoom(1, 1.3, 1.3)
     zoom_pipeline.process()
+    separate_images_and_masks("zoom_augment")
 
 
-# flip images horizontally and vertically randomly 
 def apply_flip_augment():
+    """
+    Flip images horizontally  
+    """
     clear_image_directory(flip_random_images_dir)
     flip_random_pipeline = Augmentor.Pipeline(original_images_dir, flip_random_images_dir)
     flip_random_pipeline.ground_truth(original_masks_dir)
     flip_random_pipeline.flip_left_right(1)
     flip_random_pipeline.process()
-    separate_images_and_masks("zoom_augment")
+    separate_images_and_masks("flip_random_augment")
 
 
-# Skew images by a random corner
 def apply_skew_augment():
+    """
+    Skew images by a random corner. Skewing means slanting an image towards one corner
+
+    """
     clear_image_directory(skew_images_dir)
     skew_pipeline = Augmentor.Pipeline(original_images_dir, skew_images_dir)
     skew_pipeline.ground_truth(original_masks_dir)
@@ -139,8 +179,10 @@ def apply_skew_augment():
     separate_images_and_masks("skew_augment")
 
 
-# Shearing tilts an image along one of its sides. This can be in the x-axis or y-axis direction
 def apply_shear_augment():
+    """
+    Shearing tilts an image along one of its axis. This can be in the x-axis or y-axis direction    
+    """
     clear_image_directory(shear_images_dir)
     shear_pipeline = Augmentor.Pipeline(original_images_dir, shear_images_dir)
     shear_pipeline.ground_truth(original_masks_dir)
@@ -149,22 +191,27 @@ def apply_shear_augment():
     separate_images_and_masks("shear_augment")
 
 
-# Apply random brightness augment
 def apply_brightness_augment():
+    """
+    Dims the brightness of the images by 50%
+    """
     clear_image_directory(brightness_images_dir)
     brightness_pipeline = Augmentor.Pipeline(original_images_dir, brightness_images_dir)
     brightness_pipeline.ground_truth(original_masks_dir)
-    brightness_pipeline.random_brightness(1, 0.5, 0.6)
+    brightness_pipeline.random_brightness(1, 0.5, 0.5)
     brightness_pipeline.process()
     separate_images_and_masks("brightness_augment")
 
 
-# Apply augmentations in a chain to images in a directory with certain probabilities and magnitudes
-#   p: probability range: [0, 1]
-#   m: magnitude range: [0, 1]
-#   dir_name: name of directory containing images and masks directories
-# 
 def apply_random_augments(p, m, dir_name):
+    """
+    Apply augmentations in a chain to images in a directory with certain probabilities and magnitudes
+
+    Arguments:
+        p: probability range: [0, 1]
+        m: magnitude range: [0, 1]
+        dir_name: name of directory containing images and masks directories
+    """
     image_dir_path = curr_dir + '/' + dir_name + '/images'
     masks_dir_path = curr_dir + '/' + dir_name + '/masks'
 
@@ -189,13 +236,16 @@ def apply_random_augments(p, m, dir_name):
     separate_images_and_masks(dir_name)
     
 
-# Separates images and their respective masks into different folders the images and masks folders     
+
 def separate_images_and_masks(dirname):
+    """
+    Separates images and their respective masks into different folders
+    """
     images_dir = curr_dir + "/" + dirname + "/images"
     masks_dir = curr_dir + "/" + dirname + "/masks"
 
     image_list = sorted(os.listdir(images_dir))
-    # print()
+    
     for i in image_list:
         if (i.startswith("_groundtruth_(1)_images_")):
             new_name = i.split("_groundtruth_(1)_images_")[1]
@@ -205,6 +255,7 @@ def separate_images_and_masks(dirname):
             os.rename(images_dir + '/' + i, images_dir + '/' + new_name)
 
 
+# Generate examples
 # load_original_images(1)
 # apply_brightness_augment()
 # apply_distortion_augment()
@@ -214,7 +265,7 @@ def separate_images_and_masks(dirname):
 # apply_skew_augment()
 # apply_zoom_augment()
 
-
+# Generate 7500 images in each of the directories pxmy, for x in [2, 4] and y in [6, 8]
 load_original_images(1000)
 apply_random_augments(0.2, 0.6, "p2m6")
 apply_random_augments(0.2, 0.7, "p2m7")
@@ -227,9 +278,3 @@ apply_random_augments(0.3, 0.8, "p3m8")
 apply_random_augments(0.4, 0.6, "p4m6")
 apply_random_augments(0.4, 0.7, "p4m7")
 apply_random_augments(0.4, 0.8, "p4m8")
-
-
-# clear_image_directory(original_images_dir)
-# clear_image_directory(original_masks_dir)
-# clear_image_directory(curr_dir + "/p2m6/images")
-# clear_image_directory(curr_dir + "/p2m6/masks")
