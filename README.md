@@ -97,6 +97,8 @@ Since we only have 1000 images in our dataset, our model is prone to overfit dur
 
 The library that we used is Augmentor, it provides tools to aid the augmentation and artificial generation of image data for machine learning tasks. Running the script data_augmentation.py creates 7500 augmented images and their respective masks in each of the following directories: p2m6, p2m7, p2m8, p3m6, p3m7, p3m8, p4m6, p4m7 and p4m8, where p2 represents a probability of 0.2 and m8 represents a magnitude of 8/10. In directories rotation_augment, flip_random_augment, distortion_augment, brightness_augment, skew_augment, shear_augment and zoom_augment, an image and its mask is provided to demonstrate what each transformation looks like, with the original version being 0004a718-546c-41c2-9c69-c4685093a039.jpg in the directory original.
 
+Reference (Augmentor): https://augmentor.readthedocs.io/en/stable/#
+
 ## Members:
 * Taha Kazi
 * Thomas Mayer
