@@ -22,7 +22,7 @@ NOTE: the unlabeled images are not provided in the repo as there are too many im
 
 For examples of the datasets, please refer to the datasets directory.
 
-## PolypConnect (THOMAS):
+## PolypConnect (Thomas):
 * [Paper Reference](https://arxiv.org/abs/2205.15413)
 * [Code Reference](https://github.com/andrefagereng/polyp-gan)
 ### Pipeline:
@@ -84,7 +84,7 @@ These will take in the inputs, concatenate them, and feed them to the polyp conn
 
 We support both polyp image paths and polyp edge paths to allow for sample with the origional step 3 or our proposed step 3.
 
-## Pix2Pix Model:
+## Pix2Pix Model (Taha, Venura):
 We used the Pix2Pix model for our image-to-image translation (I2I) method, where we wanted to translate an image of a polyp segmentation mask to into an polyp edge map. We used the Google Colab code they provided for training, we first used a script they provided in order to create paired images of segmentation masks and corresponding edge maps, that were provided, to feed into the model as training input. Finally, we then changed a few lines of code to feed our specific images. Provided below are the Google Colab codes that were used. We planned to use I2I, such that the current pipeline does not rely on real polyp images - unlike in Polypconnect, where Polypconnect needs real image data. After this, the edge map can be used to inpaint a polyp in the healthy colon.
 
 ## Pix2Pix Model Information/Code:
@@ -102,3 +102,11 @@ The library that we used is Augmentor, it provides tools to aid the augmentation
 * Thomas Mayer
 * Venura Perera
 * Jeffie Wong
+
+## References:
+* Borgli, H., Thambawita, V., Smedsrud, P.H. et al. HyperKvasir, a comprehensive multi-class image and video dataset for gastrointestinal endoscopy. Sci Data 7, 283 (2020). https://doi.org/10.1038/s41597-020-00622-y
+* Fagereng, Jan Andre, et al. PolypConnect: Image Inpainting for Generating Realistic Gastrointestinal Tract Images with Polyps. arXiv, 30 May 2022. arXiv.org, https://doi.org/10.48550/arXiv.2205.15413.
+* Isola, Phillip, et al. Image-to-Image Translation with Conditional Adversarial Networks. arXiv, 26 Nov. 2018. arXiv.org, https://doi.org/10.48550/arXiv.1611.07004.
+* Sánchez-Peralta LF, Picón A, Sánchez-Margallo FM, Pagador JB. Unravelling the effect of data augmentation transformations in polyp segmentation. Int J Comput Assist Radiol Surg. 2020 Dec;15(12):1975-1988. doi: 10.1007/s11548-020-02262-4. Epub 2020 Sep 28. PMID: 32989680; PMCID: PMC7671995.
+* Ali, Sharib, et al. PolypGen: A Multi-Center Polyp Detection and Segmentation Dataset for Generalisability Assessment. arXiv, 16 Nov. 2021. arXiv.org, https://doi.org/10.48550/arXiv.2106.04463.
+* Nazeri, Kamyar, et al. EdgeConnect: Generative Image Inpainting with Adversarial Edge Learning. arXiv, 11 Jan. 2019. arXiv.org, https://doi.org/10.48550/arXiv.1901.00212.
